@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG System Enhancement Proposal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Enhancing Analytics with RAG</h1>
+    </header>
+
+    <section class="description">
+        <h2>What is RAG?</h2>
+        <p>Retrieval Augmented Generation (RAG) is an AI approach that combines your existing data with large language models. Instead of relying solely on AI, it grounds responses in your actual business data, making it particularly useful for analytics.</p>
+
+        <h3>How Could This Help?</h3>
+        <p>A RAG system could integrate with your analytics by:</p>
+        <ul>
+            <li>Building on your existing SQL views and metrics</li>
+            <li>Converting complex queries into natural language conversations</li>
+            <li>Finding patterns across historical data automatically</li>
+            <li>Providing predictions and recommendations based on historical data</li>
+            <li>Scaling analysis without changing your current workflow</li>
+        </ul>
+
+        <p class="note">The diagram below shows how RAG could connect with your database, using your views to power AI insights while keeping your data processes intact.</p>
+    </section>
+  
+    <div class="mermaid">
+        flowchart LR
+        subgraph "Data Processing"
+            DB[(Database)] --> Views[Pre-calculated Views]
+            Views --> Raw[Raw Metrics]
+            Raw --> LLM1[LLM Analysis]
+            LLM1 --> RichDocs[Rich Text Documents]
+            RichDocs --> Embed[Generate Embeddings]
+            Embed --> VStore[(Vector Store)]
+            
+            click DB callback "User Database contains:
+            - User table: IDs, registration dates, regions
+            - Sessions table: swim times, distances, dates
+            - Telemetry table?: stroke rates, speeds, heart rates
+            - App data: feedback (clicks, swipes, etc.), surveys, and other user-generated content
+            - Subscriptions table: plans, status, history"
+            
+            click Views callback "Pre-calculated SQL Views:
+            Example view: user_engagement
+            SELECT 
+                user_id,
+                COUNT(session_id) as total_sessions,
+                AVG(distance) as avg_distance,
+                MAX(date) as last_session
+            FROM sessions
+            GROUP BY user_id"
+            
+            click Raw callback "Raw Metrics Examples:
+            User ID: 123
+            - Total Sessions: 45
+            - Recent Sessions (30d): 8
+            - Avg Distance: 1500m
+            - Subscription Age: 180 days
+            - Plan Type: premium
+            - Active Days: 25/90"
+            
+            click LLM1 callback "LLM Analysis Example:
+            Input: Raw metrics for user 123
+            Output: This premium member shows consistent engagement 
+            with a moderate to high activity level. With 45 total 
+            sessions over 180 days, they maintain a steady swimming 
+            routine of 2-3 sessions per week. Their recent activity 
+            of 8 sessions in the past 30 days suggests stable engagement."
+            
+            click RichDocs callback "Rich Document Example:
+            {
+              'text': [LLM analysis text],
+              'metadata': {
+                'user_id': 123,
+                'activity_level': 'high',
+                'plan_type': 'premium',
+                'sessions_30d': 8
+              }
+            }"
+            
+            click Embed callback "Embedding Process:
+            1. Take rich document text
+            2. Generate embedding vector using OpenAI Ada-002
+            3. Store vector (1536 dimensions) with metadata
+            Example vector: [0.023, -0.015, 0.089, ...]"
+            
+            click VStore callback "Vector Store Contents:
+            - Embedding vectors
+            - Original documents
+            - Metadata for filtering
+            Example entry:
+            {
+              'vector': [0.023, ...],
+              'text': 'User analysis...',
+              'metadata': {'user_id': 123, ...}
+            }"
+        end
+    
+        subgraph "Query Processing"
+            Q1[User Question] --> LLM2[LLM Enhancement]
+            LLM2 --> Q2[Enhanced Question]
+            Q2 --> QEmbed[Question Embedding]
+            QEmbed --> Search[Vector Search]
+            VStore --> Search
+            Search --> Match[Top Matches]
+            Match --> Context[Build Context]
+            Context --> LLM3[Generate Response]
+            
+            click Q1 callback "Example Questions:
+            - Which users might churn soon?
+            - What patterns indicate high engagement?
+            - How does swimming frequency affect retention?
+            - Who are our most improved swimmers?"
+            
+            click LLM2 callback "Question Enhancement Example:
+            Original: 'Who might churn?'
+            Enhanced: 'Identify users showing signs of 
+            decreasing engagement, including reduced 
+            session frequency, shorter swims, or irregular 
+            attendance patterns in recent months.'"
+            
+            click Q2 callback "Enhanced Question Structure:
+            {
+              'core_question': 'churn risk identification',
+              'metrics_needed': ['session_frequency', 'duration'],
+              'timeframe': 'recent_months',
+              'pattern_type': 'declining_engagement'
+            }"
+            
+            click QEmbed callback "Question Embedding Process:
+            1. Take enhanced question
+            2. Generate embedding vector
+            Example vector: [0.045, -0.012, 0.078, ...]
+            Used for similarity search"
+            
+            click Search callback "Vector Search Process:
+            1. Compare question vector to stored vectors
+            2. Calculate cosine similarity
+            3. Return top matches (e.g., top 3-5)
+            Example similarity scores:
+            - Doc1: 0.89
+            - Doc2: 0.82
+            - Doc3: 0.75"
+            
+            click Match callback "Top Matches Example:
+            Retrieved documents about:
+            1. User showing declining engagement
+            2. Similar churned user pattern
+            3. Successful retention case
+            With similarity scores and metadata"
+            
+            click Context callback "Context Building Example:
+            Combined context includes:
+            1. Similar user patterns
+            2. Relevant metrics
+            3. Historical outcomes
+            Formatted for LLM consumption"
+            
+            click LLM3 callback "Response Generation Example:
+            Question: 'Who might churn soon?'
+            Response: 'Based on analysis of similar patterns,
+            users 123, 456, and 789 show concerning signs:
+            - User 123: 60% decrease in session frequency
+            - User 456: Shorter sessions, irregular attendance
+            - User 789: Recent shift to off-peak hours
+            Recommended actions: [specific suggestions]'"
+        end
+    
+        style DB fill:#f9f,stroke:#333
+        style VStore fill:#f9f,stroke:#333
+        style LLM1 fill:#bbf,stroke:#333
+        style LLM2 fill:#bbf,stroke:#333
+        style LLM3 fill:#bbf,stroke:#333
+    </div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default'
+        });
+    </script>
+</body>
+</html>
